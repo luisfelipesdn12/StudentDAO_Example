@@ -2,15 +2,19 @@ package br.dev.joaquim.StudentApp.ihm;
 
 import java.util.Scanner;
 
+import br.dev.joaquim.StudentApp.dao.CourseDAO;
 import br.dev.joaquim.StudentApp.dao.StudentDAO;
+import br.dev.joaquim.StudentApp.entities.Course;
 import br.dev.joaquim.StudentApp.entities.Student;
 
-public class StudentIHM {
+public class StudentIHM implements GenericIHM {
 
     private StudentDAO studentDAO;
+    private CourseDAO courseDAO;
 
-    public StudentIHM(StudentDAO studentDAO) {
+    public StudentIHM(StudentDAO studentDAO, CourseDAO courseDAO) {
         this.studentDAO = studentDAO;
+        this.courseDAO = courseDAO;
     }
 
     public void start() {
@@ -22,7 +26,8 @@ public class StudentIHM {
             System.out.println("1. Add Student");
             System.out.println("2. View All Students");
             System.out.println("3. Update Student");
-            System.out.println("4. Delete Student");
+            System.out.println("4. Link Student to Course");
+            System.out.println("5. Delete Student");
             System.out.println("0. Exit");
             System.out.print("Choose an option: ");
             option = scanner.nextInt();
@@ -39,6 +44,9 @@ public class StudentIHM {
                     updateStudent(scanner);
                     break;
                 case 4:
+                    addCourse(scanner);
+                    break;
+                case 5:
                     deleteStudent(scanner);
                     break;
                 case 0:
@@ -48,8 +56,6 @@ public class StudentIHM {
                     System.out.println("Invalid option. Try again.");
             }
         }
-
-        scanner.close();
     }
 
     private void addStudent(Scanner scanner) {
@@ -91,6 +97,32 @@ public class StudentIHM {
 
         studentDAO.update(student);
         System.out.println("Student updated successfully.");
+    }
+
+
+    private void addCourse(Scanner scanner) {
+        System.out.print("Enter student RA to update: ");
+        int ra = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        System.out.print("Enter course ID to link: ");
+        int id = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        Student student = studentDAO.findByRa(ra);
+        if (student == null) {
+            System.out.println("Student not found.");
+            return;
+        }
+
+        Course course = courseDAO.findById(id);
+        if (course == null) {
+            System.out.println("Course not found.");
+            return;
+        }
+
+        studentDAO.setCourse(ra, id);
+        System.out.println("Student linked successfully.");
     }
 
     private void deleteStudent(Scanner scanner) {

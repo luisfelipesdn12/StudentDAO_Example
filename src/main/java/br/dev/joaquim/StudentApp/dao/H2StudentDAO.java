@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import br.dev.joaquim.StudentApp.entities.Course;
 import br.dev.joaquim.StudentApp.entities.Student;
 
 public class H2StudentDAO implements StudentDAO {
@@ -16,10 +17,12 @@ public class H2StudentDAO implements StudentDAO {
   private String url = "jdbc:h2:file:~/data/students;";
   private String user = "root";
   private String password = "root";
+  private CourseDAO courseDAO;
 
   public H2StudentDAO() {
     connect();
     createTableIfNotExists();
+    courseDAO = new H2CourseDAO();
   }
 
   private void connect() {
@@ -35,7 +38,7 @@ public class H2StudentDAO implements StudentDAO {
   private void createTableIfNotExists() {
     try {
       String sql = "CREATE TABLE IF NOT EXISTS students(" +
-          "ra INT, name VARCHAR(256), PRIMARY KEY (ra));";
+          "ra INT, name VARCHAR(256), course_id INT, PRIMARY KEY (ra), FOREIGN KEY (course_id) REFERENCES courses(id));";
       PreparedStatement stmt = connection.prepareStatement(sql);
       stmt.execute();
     } catch (SQLException ex) {
@@ -49,7 +52,7 @@ public class H2StudentDAO implements StudentDAO {
   @Override
   public boolean create(Student student) {
     try {
-      String sql = "INSERT INTO students VALUES(?,?)";
+      String sql = "INSERT INTO students (ra, name) VALUES(?,?)";
       PreparedStatement stmt = connection.prepareStatement(sql);
       stmt.setInt(1, student.getRa());
       stmt.setString(2, student.getName());
@@ -79,7 +82,9 @@ public class H2StudentDAO implements StudentDAO {
       while (rs.next()) {
         int ra = rs.getInt("ra");
         String name = rs.getString("name");
-        Student student = new Student(ra, name);
+        int courseId = rs.getInt("course_id");
+        Course course = courseDAO.findById(courseId);
+        Student student = new Student(ra, name, courseId, course);
         students.add(student);
       }
 
@@ -105,7 +110,11 @@ public class H2StudentDAO implements StudentDAO {
 
       if (rs.next()) {
         String name = rs.getString("name");
-        return new Student(ra, name);
+        int courseId = rs.getInt("course_id");
+
+        Course course = courseDAO.findById(courseId);
+
+        return new Student(ra, name, courseId, course);
       }
     } catch (SQLException ex) {
       System.out.println("Problema ao buscar estudante pelo RA");
@@ -124,6 +133,27 @@ public class H2StudentDAO implements StudentDAO {
       PreparedStatement stmt = connection.prepareStatement(sql);
       stmt.setString(1, student.getName());
       stmt.setInt(2, student.getRa());
+      stmt.executeUpdate();
+
+      return true;
+
+    } catch (SQLException ex) {
+      System.out.println("Problema ao atualizar estudante");
+      ex.printStackTrace();
+    } catch (NullPointerException ex) {
+      System.out.println("Problema ao atualizar estudante (sem conexao)");
+    }
+
+    return false;
+  }
+
+  @Override
+  public boolean setCourse(int ra, int courseId) {
+    try {
+      String sql = "UPDATE students SET course_id = ? WHERE ra = ?";
+      PreparedStatement stmt = connection.prepareStatement(sql);
+      stmt.setInt(1, courseId);
+      stmt.setInt(2, ra);
       stmt.executeUpdate();
 
       return true;

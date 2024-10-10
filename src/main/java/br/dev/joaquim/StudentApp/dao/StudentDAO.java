@@ -13,5 +13,7 @@ public interface StudentDAO {
 
   public boolean update(Student student);
 
+  public boolean setCourse(int ra, int courseId);
+
   public boolean delete(int ra);
 }

@@ -4,8 +4,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import br.dev.joaquim.StudentApp.dao.H2StudentDAO;
-import br.dev.joaquim.StudentApp.ihm.StudentIHM;
+import br.dev.joaquim.StudentApp.ihm.GenericIHM;
+import br.dev.joaquim.StudentApp.ihm.MainIHM;
 
 @SpringBootApplication
 public class StudentAppApplication implements CommandLineRunner {
@@ -20,8 +20,7 @@ public class StudentAppApplication implements CommandLineRunner {
 		System.out.println("APLICACAO INICIALIZADA");
 		System.out.println("-------------------------");
 
-		StudentIHM ihm = new StudentIHM(new H2StudentDAO());
+		GenericIHM ihm = new MainIHM();
 		ihm.start();
 	}
-
 }
